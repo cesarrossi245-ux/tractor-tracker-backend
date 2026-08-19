@@ -31,7 +31,6 @@ func main() {
 	authHandler := handlers.NewAuthHandler(pool)
 	geofenceHandler := handlers.NewGeofenceHandler(pool)
 	userHandler := handlers.NewUserHandler(pool)
-	setupHandler := handlers.NewSetupHandler(pool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -44,11 +43,6 @@ func main() {
 		// puede requerir estar ya autenticado.
 		r.Post("/gps/ingest", gpsHandler.Ingest)
 		r.Post("/auth/login", authHandler.Login)
-
-		// ⚠️ RUTA TEMPORAL de arranque: crea el primer usuario admin sin
-		// necesitar Go/Node instalados localmente. Protegida con SETUP_SECRET.
-		// BÓRRALA (este bloque + setup.go) después de crear tu primer usuario.
-		r.Get("/setup/create-user", setupHandler.CreateFirstUser)
 
 		// Rutas protegidas: requieren un JWT válido (el operador
 		// tiene que haber iniciado sesión desde el frontend).
