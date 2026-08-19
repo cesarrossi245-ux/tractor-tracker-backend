@@ -49,6 +49,7 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(auth.RequireAuth)
 			r.Get("/tractors", tractorHandler.List)
+			r.Post("/tractors", tractorHandler.Create)
 			r.Get("/tractors/{id}/last", tractorHandler.LastPosition)
 			r.Get("/tractors/{id}/positions", tractorHandler.History)
 			r.Get("/geofences", geofenceHandler.List)
