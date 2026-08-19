@@ -148,6 +148,40 @@ func parseRange(r *http.Request) (time.Time, time.Time, error) {
 	return from, to, nil
 }
 
+// Create registra un tractor nuevo, junto con el device_key que va a
+// usar el dispositivo GPS (o el celular de prueba) para identificarse.
+// POST /api/v1/tractors
+func (h *TractorHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var t models.Tractor
+	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+		http.Error(w, "JSON inválido", http.StatusBadRequest)
+		return
+	}
+	if t.Name == "" || t.DeviceKey == "" {
+		http.Error(w, "name y device_key son requeridos", http.StatusBadRequest)
+		return
+	}
+	if t.Status == "" {
+		t.Status = "active"
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	_, err := h.DB.ExecContext(ctx, `
+		INSERT INTO tractors (id, name, plate, brand, model, device_key, status)
+		VALUES (UUID(), ?, ?, ?, ?, ?, ?)`,
+		t.Name, t.Plate, t.Brand, t.Model, t.DeviceKey, t.Status,
+	)
+	if err != nil {
+		http.Error(w, "error guardando el tractor (¿device_key repetido?): "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
