@@ -72,6 +72,28 @@ type Position struct {
 	RecordedAt  time.Time `json:"recorded_at"`
 }
 
+// GeofencePoint es un vértice (lat/lon) del contorno de un lote.
+type GeofencePoint struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+// Geofence representa un lote/parcela dibujado sobre el mapa.
+type Geofence struct {
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Points    []GeofencePoint `json:"points"`
+	CreatedAt time.Time       `json:"created_at"`
+}
+
+// CreateGeofenceRequest es el payload que manda el frontend al guardar
+// un lote nuevo: nombre y la lista de vértices en el orden en que se
+// dibujaron.
+type CreateGeofenceRequest struct {
+	Name   string          `json:"name"`
+	Points []GeofencePoint `json:"points"`
+}
+
 // LiveUpdate es lo que se transmite por WebSocket a los clientes
 // conectados cuando llega una posición nueva.
 type LiveUpdate struct {
