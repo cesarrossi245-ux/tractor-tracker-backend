@@ -30,6 +30,9 @@ func main() {
 	tractorHandler := handlers.NewTractorHandler(pool)
 	authHandler := handlers.NewAuthHandler(pool)
 	geofenceHandler := handlers.NewGeofenceHandler(pool)
+	activityHandler := handlers.NewActivityHandler(pool)
+	userHandler := handlers.NewUserHandler(pool)
+	setupHandler := handlers.NewSetupHandler(pool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -43,6 +46,11 @@ func main() {
 		r.Post("/gps/ingest", gpsHandler.Ingest)
 		r.Post("/auth/login", authHandler.Login)
 
+		// ⚠️ RUTA TEMPORAL de arranque: crea el primer usuario admin sin
+		// necesitar Go/Node instalados localmente. Protegida con SETUP_SECRET.
+		// BÓRRALA (este bloque + setup.go) después de crear tu primer usuario.
+		r.Get("/setup/create-user", setupHandler.CreateFirstUser)
+
 		// Rutas protegidas: requieren un JWT válido (el operador
 		// tiene que haber iniciado sesión desde el frontend).
 		r.Group(func(r chi.Router) {
@@ -52,6 +60,15 @@ func main() {
 			r.Get("/tractors/{id}/positions", tractorHandler.History)
 			r.Get("/geofences", geofenceHandler.List)
 			r.Post("/geofences", geofenceHandler.Create)
+			r.Get("/activity", activityHandler.List)
+
+			// Gestión de usuarios: solo administradores.
+			r.Group(func(r chi.Router) {
+				r.Use(handlers.RequireAdmin)
+				r.Get("/users", userHandler.List)
+				r.Post("/users", userHandler.Create)
+				r.Put("/users/{id}/role", userHandler.UpdateRole)
+			})
 		})
 	})
 
