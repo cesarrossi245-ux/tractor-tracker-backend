@@ -30,7 +30,6 @@ func main() {
 	tractorHandler := handlers.NewTractorHandler(pool)
 	authHandler := handlers.NewAuthHandler(pool)
 	geofenceHandler := handlers.NewGeofenceHandler(pool)
-	activityHandler := handlers.NewActivityHandler(pool)
 	userHandler := handlers.NewUserHandler(pool)
 	setupHandler := handlers.NewSetupHandler(pool)
 
@@ -60,7 +59,6 @@ func main() {
 			r.Get("/tractors/{id}/positions", tractorHandler.History)
 			r.Get("/geofences", geofenceHandler.List)
 			r.Post("/geofences", geofenceHandler.Create)
-			r.Get("/activity", activityHandler.List)
 
 			// Gestión de usuarios: solo administradores.
 			r.Group(func(r chi.Router) {
