@@ -29,6 +29,7 @@ func main() {
 	gpsHandler := handlers.NewGPSHandler(pool, hub)
 	tractorHandler := handlers.NewTractorHandler(pool)
 	authHandler := handlers.NewAuthHandler(pool)
+	geofenceHandler := handlers.NewGeofenceHandler(pool)
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
@@ -49,6 +50,8 @@ func main() {
 			r.Get("/tractors", tractorHandler.List)
 			r.Get("/tractors/{id}/last", tractorHandler.LastPosition)
 			r.Get("/tractors/{id}/positions", tractorHandler.History)
+			r.Get("/geofences", geofenceHandler.List)
+			r.Post("/geofences", geofenceHandler.Create)
 		})
 	})
 
@@ -59,7 +62,6 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
-		r.Get("/tracker", handlers.TrackerPage)
 
 	// 📍 PÁGINA DEL TRACKER GPS (sirve HTML con geolocalización)
 	r.Get("/tracker", handlers.TrackerPage)
