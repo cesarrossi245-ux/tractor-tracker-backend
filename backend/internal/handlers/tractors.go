@@ -182,6 +182,35 @@ func (h *TractorHandler) Create(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
+// Delete borra un tractor (y sus posiciones GPS asociadas).
+// DELETE /api/v1/tractors/{id}
+func (h *TractorHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	// Borramos primero las posiciones (evita error de llave foránea si
+	// la tabla positions referencia a tractors).
+	if _, err := h.DB.ExecContext(ctx, `DELETE FROM positions WHERE tractor_id = ?`, id); err != nil {
+		http.Error(w, "error borrando posiciones del tractor: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res, err := h.DB.ExecContext(ctx, `DELETE FROM tractors WHERE id = ?`, id)
+	if err != nil {
+		http.Error(w, "error borrando el tractor: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	n, _ := res.RowsAffected()
+	if n == 0 {
+		http.Error(w, "tractor no encontrado", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)
